@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qteleport"
+version = "0.1.0"
+description = "Quantum teleportation in Qiskit with dynamic circuits, tested against exact statevectors"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["qiskit>=2.0", "qiskit-aer>=0.17", "matplotlib", "pylatexenc"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

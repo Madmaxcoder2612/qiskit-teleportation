@@ -1,0 +1,26 @@
+{
+  "zero": {
+    "theta": 0.0,
+    "phi": 0.0,
+    "with_corrections": 1.0,
+    "without_corrections": 0.4961
+  },
+  "plus": {
+    "theta": 1.5707963267948966,
+    "phi": 0.0,
+    "with_corrections": 1.0,
+    "without_corrections": 0.4937
+  },
+  "generic": {
+    "theta": 1.1,
+    "phi": 2.3,
+    "with_corrections": 1.0,
+    "without_corrections": 0.4937
+  },
+  "one": {
+    "theta": 3.141592653589793,
+    "phi": 0.0,
+    "with_corrections": 1.0,
+    "without_corrections": 0.4937
+  }
+}
