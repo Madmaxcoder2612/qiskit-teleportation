@@ -1,6 +1,6 @@
 """Simulate teleportation: ideal vs noisy, with and without Bob's corrections.
 
-Usage:  python -m qteleport.run [--noisy] [--out results]
+Usage:  python -m qteleport.run [--noisy] [--sweep] [--out results]
 """
 from __future__ import annotations
 
@@ -30,13 +30,19 @@ STATES = {
 }
 
 
-def make_backend(noisy: bool) -> AerSimulator:
+SWEEP_P2 = [0.0, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1]  # two-qubit error rates swept
+
+
+def make_backend(noisy: bool, p1: float = 0.001, p2: float = 0.01) -> AerSimulator:
+    """Aer simulator, ideal or with depolarizing noise (p1 one-qubit, p2 two-qubit)."""
     if not noisy:
         return AerSimulator(seed_simulator=SEED)
     nm = NoiseModel()
     # Illustrative error rates, NOT calibrated to any real IBM device.
-    nm.add_all_qubit_quantum_error(depolarizing_error(0.001, 1), ["h", "x", "z", "u", "sx", "rz", "ry"])
-    nm.add_all_qubit_quantum_error(depolarizing_error(0.01, 2), ["cx"])
+    if p1 > 0:
+        nm.add_all_qubit_quantum_error(depolarizing_error(p1, 1), ["h", "x", "z", "u", "sx", "rz", "ry"])
+    if p2 > 0:
+        nm.add_all_qubit_quantum_error(depolarizing_error(p2, 2), ["cx"])
     return AerSimulator(noise_model=nm, seed_simulator=SEED)
 
 
@@ -48,13 +54,43 @@ def success_probability(theta: float, phi: float, backend, corrections: bool) ->
     return zeros / SHOTS
 
 
+def noise_sweep(state: str = "generic", p2_values=SWEEP_P2) -> dict[float, float]:
+    """Success probability against two-qubit error rate p2 (one-qubit rate is p2/10)."""
+    theta, phi = STATES[state]
+    return {p2: success_probability(theta, phi, make_backend(True, p1=p2 / 10, p2=p2), True)
+            for p2 in p2_values}
+
+
+def plot_sweep(sweep: dict[float, float], out: Path, state: str) -> None:
+    fig, ax = plt.subplots(figsize=(6, 3.5))
+    ax.plot(list(sweep), list(sweep.values()), "o-", label="with corrections")
+    ax.axhline(0.5, ls="--", color="gray", label="no corrections (coin flip)")
+    ax.set_xlabel("two-qubit depolarizing error rate (one-qubit rate = a tenth of it)")
+    ax.set_ylabel("P(Bob's check = 0)")
+    ax.set_ylim(0.4, 1.02)
+    ax.set_title(f"Teleportation against noise ('{state}' state, {SHOTS} shots)")
+    ax.legend(loc="upper right")
+    fig.savefig(out / "noise_sweep.png", dpi=120, bbox_inches="tight")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--noisy", action="store_true")
+    ap.add_argument("--sweep", action="store_true",
+                    help="sweep the two-qubit error rate and save noise_sweep.png and summary_sweep.json")
     ap.add_argument("--out", default="results")
     args = ap.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    if args.sweep:
+        sweep = noise_sweep()
+        for p2, p in sweep.items():
+            print(f"p2 = {p2:<6} success {p:.3f}")
+        (out / "summary_sweep.json").write_text(
+            json.dumps({"state": "generic", "shots": SHOTS, "seed": SEED,
+                        "success_by_p2": {str(k): round(v, 4) for k, v in sweep.items()}}, indent=2))
+        plot_sweep(sweep, out, "generic")
+        return
     tag = "noisy" if args.noisy else "ideal"
     backend = make_backend(args.noisy)
 

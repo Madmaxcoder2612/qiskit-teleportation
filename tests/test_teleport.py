@@ -8,7 +8,7 @@ from qiskit_aer import AerSimulator
 from qiskit import transpile
 
 from qteleport import teleport_coherent, teleport_dynamic
-from qteleport.run import STATES, success_probability
+from qteleport.run import STATES, make_backend, noise_sweep, success_probability
 
 ANGLES = [(0.0, 0.0), (math.pi / 2, 0.0), (1.1, 2.3), (math.pi, 0.5), (2.7, -1.3)]
 
@@ -47,3 +47,18 @@ def test_circuits_have_expected_registers():
     assert qc.num_qubits == 3
     assert [c.name for c in qc.cregs] == ["m0", "m1", "bob"]
     assert teleport_dynamic(0.3, 0.4, verify=False).num_clbits == 2
+
+
+def test_default_noisy_backend_matches_the_documented_rates():
+    # The sweep refactor must not change the headline noisy numbers in the README.
+    p = success_probability(*STATES["generic"], make_backend(True), corrections=True)
+    assert p == pytest.approx(0.987, abs=0.002)
+
+
+def test_noise_sweep_starts_perfect_and_degrades():
+    sweep = noise_sweep(p2_values=[0.0, 0.02, 0.1])
+    assert sweep[0.0] == 1.0
+    assert sweep[0.02] < sweep[0.0]
+    assert sweep[0.1] < sweep[0.02]
+    # Even heavy noise stays above the 0.5 coin flip of the no-corrections control.
+    assert sweep[0.1] > 0.6
