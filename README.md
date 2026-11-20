@@ -42,6 +42,18 @@ Without the fixes Bob's qubit is, averaged over Alice's four random outcomes, ma
 
 ![Success ideal](results/success_ideal.png)
 
+### How much noise can it take?
+
+Sweeping the two-qubit depolarizing error rate (the one-qubit rate is a tenth of it) for the `generic` state, with corrections:
+
+| Two-qubit error | 0 | 0.002 | 0.005 | 0.01 | 0.02 | 0.05 | 0.1 |
+|---|---|---|---|---|---|---|---|
+| Success | 1.000 | 0.997 | 0.994 | 0.987 | 0.973 | 0.933 | 0.886 |
+
+![Noise sweep](results/noise_sweep.png)
+
+Success falls smoothly, roughly linearly in the error rate, and stays well above the 0.5 coin flip of the no-corrections control even at 10% two-qubit error. The circuit uses only two CNOTs in total, so there are few places for a two-qubit error to enter. The 0.01 column is the same noise level as the noisy table above.
+
 ## Quick start
 
 ```powershell
@@ -53,6 +65,7 @@ pip install -e ".[test]"
 pytest -q
 python -m qteleport.run            # ideal simulator
 python -m qteleport.run --noisy    # with depolarizing noise
+python -m qteleport.run --sweep    # success against error rate
 ```
 
 ## How it works
@@ -66,7 +79,7 @@ python -m qteleport.run --noisy    # with depolarizing noise
 | File | What it does |
 |---|---|
 | `src/qteleport/circuits.py` | `teleport_coherent` (no measurements, exact state check) and `teleport_dynamic` (mid-circuit measurement, `if_test` corrections) |
-| `src/qteleport/run.py` | Simulates 4 test states, ideal or noisy, with and without corrections; saves plot and JSON |
+| `src/qteleport/run.py` | Simulates 4 test states, ideal or noisy, with and without corrections; `--sweep` varies the error rate; saves plots and JSON |
 | `tests/test_teleport.py` | Exact fidelity for 5 angle pairs, ideal-simulator success, negative control, register checks |
 | `.github/workflows/ci.yml` | Runs tests and both simulations on Python 3.10 and 3.12 |
 
@@ -75,7 +88,7 @@ python -m qteleport.run --noisy    # with depolarizing noise
 ```
 02-qiskit-teleportation/
 ├── src/qteleport/     circuits and runner
-├── tests/             pytest suite (12 tests)
+├── tests/             pytest suite (14 tests)
 ├── results/           generated plots and JSON
 ├── .github/workflows/ CI
 └── pyproject.toml
@@ -86,12 +99,13 @@ python -m qteleport.run --noisy    # with depolarizing noise
 - Simulator only. Qubits are all neighbours here; real devices have limited connectivity and may not support the same dynamic-circuit features on every backend.
 - Noise rates (0.1% single-qubit, 1% two-qubit depolarizing) are made-up round numbers, and measurement/readout error is not modelled.
 - Only a one-qubit message is teleported, and the success check measures one basis after un-preparing, not full state tomography.
-- Single runs with a fixed seed.
+- Single runs with a fixed seed. The sweep has one run per point, so differences smaller than about 0.01 are within shot noise (4096 shots).
+- The sweep ties the one-qubit rate to the two-qubit rate and uses depolarizing noise only. Real devices also have decay, dephasing and readout error.
 
 ## Next steps
 
 1. Run both projects on real IBM hardware through the free Open Plan and compare with these simulator numbers.
-2. Add error mitigation.
+2. Add error mitigation, and a readout error model to the sweep.
 3. Deutsch–Jozsa or Bernstein–Vazirani as the next algorithm.
 
 ## License

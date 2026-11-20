@@ -19,3 +19,4 @@ jobs:
       - run: pytest -q
       - run: python -m qteleport.run --out results
       - run: python -m qteleport.run --noisy --out results
+      - run: python -m qteleport.run --sweep --out results
