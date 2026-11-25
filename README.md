@@ -1,9 +1,9 @@
 # 02 · Qiskit quantum teleportation
 
-![CI](https://github.com/Madmaxcoder2612/qiskit-teleportation/actions/workflows/ci.yml/badge.svg)
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Status](https://img.shields.io/badge/status-simulation%20only-orange)
+[![CI](https://github.com/Madmaxcoder2612/qiskit-teleportation/actions/workflows/ci.yml/badge.svg)](https://github.com/Madmaxcoder2612/qiskit-teleportation/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Status](https://img.shields.io/badge/status-simulation%20only-orange)](#limitations)
 
 Teleports the state of one qubit from Alice to Bob using a shared entangled pair and two classical bits, built in [Qiskit](https://www.ibm.com/quantum/qiskit). The circuit is checked two ways: an exact statevector test, and a simulated run with mid-circuit measurements and classically controlled corrections. A negative control (skip the corrections) shows the corrections are what make it work.
 
